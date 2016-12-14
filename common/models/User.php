@@ -64,7 +64,7 @@ class User extends ActiveRecord implements IdentityInterface
     {
         return [
             ['status', 'default', 'value' => self::STATUS_ACTIVE],
-            ['status', 'in', 'range' => [self::STATUS_ACTIVE, self::STATUS_DELETED]],
+            ['status', 'in', 'range' => [self::STATUS_ACTIVE, self::STATUS_DELETED, self::STATUS_LOCKED]],
         ];
     }
 
@@ -73,7 +73,7 @@ class User extends ActiveRecord implements IdentityInterface
      */
     public static function findIdentity($id)
     {
-        return static::findOne(['id' => $id, 'status' => self::STATUS_ACTIVE]);
+        return static::findOne(['id' => $id, ['in', 'status', [self::STATUS_ACTIVE, self::STATUS_LOCKED]]]);
     }
 
     /**
@@ -202,5 +202,30 @@ class User extends ActiveRecord implements IdentityInterface
     public function isAdmin()
     {
         return $this->type == self::TYPE_ADMIN;
+    }
+    
+    public function isSupervisor()
+    {
+        return $this->type == self::TYPE_SUPERVISOR;
+    }
+    
+    public function isServiceman()
+    {
+        return $this->type == self::TYPE_SERVICEMAN;
+    }
+    
+    public function isClient()
+    {
+        return $this->type == self::TYPE_CLIENT;
+    }
+    
+    public static function findAllUsers()
+    {
+        $query = (new \yii\db\Query)->select(['username'])
+                    ->from(self::tableName())
+                    ->where(['!=', 'status', User::STATUS_DELETED])
+                    ->indexBy('id')
+                    ->column();
+        return $query;
     }
 }
