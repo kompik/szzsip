@@ -10,9 +10,10 @@ use yii\filters\VerbFilter;
 use yii\filters\AccessControl;
 use common\models\Project;
 use common\models\User;
-use common\models\ProjectSearch;
+use common\models\OrderSearch;
 use common\models\Client;
-use frontend\models\ProjectForm;
+use common\models\Order;
+use frontend\models\OrderForm;
 use Exception;
 use yii\db\Query;
 use yii\helpers\Url;
@@ -20,7 +21,7 @@ use yii\web\NotFoundHttpException;
 use yii\web\Response;
 use yii\data\ActiveDataProvider;
 
-class ProjectController extends Controller
+class OrderController extends Controller
 {
     /**
      * @inheritdoc
@@ -105,34 +106,36 @@ class ProjectController extends Controller
      */
     public function actionIndex()
     {
-        $searchModel = new ProjectSearch();
+        $searchModel = new OrderSearch();
         $dataProvider = $searchModel->search(Yii::$app->request->queryParams);
         $userList = User::findAllUsers();
         $clientsList = Client::findAllClients();
-        $projectsNames = Project::getAllProjectsNames();
+        $orderNames = Order::getAllOrdersNames();
+        $projects = Project::getAllProjects();
         return $this->render('index', [
             'dataProvider' => $dataProvider,
             'searchModel' => $searchModel,
             'userList' => $userList,
             'clientsList' => $clientsList,
-            'projectsNames' => $projectsNames
+            'orderNames' => $orderNames,
+            'projects' => $projects
                 ]);
     }
     
     public function actionAdd()
     {
-        $projectForm = new ProjectForm();
-        if ($projectForm->load(Yii::$app->request->post()) && $projectForm->validate()){
+        $orderForm = new OrderForm();
+        if ($orderForm->load(Yii::$app->request->post()) && $orderForm->validate()){
             $transaction = Yii::$app->db->beginTransaction();
                 try {
-                    $projectForm->addProject();
+                    $orderForm->addOrder();
                     $transaction->commit();
-                    Yii::$app->session->addFlash('success', Yii::t('app', 'Dodano projekt'));
-                    return $this->redirect('/project/index');
+                    Yii::$app->session->addFlash('success', Yii::t('app', 'Dodano zlecenie'));
+                    return $this->redirect('/order/index');
                 }
                 catch (ActionException $ex){
                     $transaction->rollBack();
-                    $projectForm->addError('name', $ex->getMessage());
+                    $orderForm->addError('name', $ex->getMessage());
                 }                   
                 catch (Exception $ex) {
                     $transaction->rollBack();
@@ -141,20 +144,22 @@ class ProjectController extends Controller
         }
         $userList = User::findAllUsers();
         $clientsList = Client::findAllClients();
-        $projectStatus = Project::listStatuses();
+        $orderStatus = Order::listStatuses();
+        $projects = Project::getAllProjects();
         return $this->render('add', [
-            'projectForm' => $projectForm,
+            'orderForm' => $orderForm,
             'userList' => $userList,
             'clientsList' => $clientsList,
-            'projectStatus' => $projectStatus
+            'orderStatus' => $orderStatus,
+            'projects' => $projects
                 ]);
     }
     
     public function actionUpdate($id)
     {
-        $project = Project::findOne($id);
+        $order = Order::findOne($id);
         
-        if ($project->load(Yii::$app->request->post()) && $project->save())
+        if ($order->load(Yii::$app->request->post()) && $order->save())
         {
             Yii::$app->session->addFlash('success', Yii::t('app', 'Zapisano zmiany.'));
             return $this->redirect(['index']);
@@ -162,23 +167,25 @@ class ProjectController extends Controller
         }
         $userList = User::findAllUsers();
         $clientsList = Client::findAllClients();
-        $projectStatus = Project::listStatuses();
+        $orderStatus = Order::listStatuses();
+        $projects = Project::getAllProjects();
         return $this->render('update', [
-            'project' => $project,
+            'order' => $order,
             'userList' => $userList,
             'clientsList' => $clientsList,
-            'projectStatus' => $projectStatus
+            'orderStatus' => $orderStatus,
+            'projects' => $projects
                 ]);
     }
     
     public function actionDelete($id)
     {
-        $project = Project::findOne($id);
+        $order = Order::findOne($id);
         
-        $project->status = Project::STATUS_DELETED;
-        if ($project->save(false, ['status', 'updated_at']))
+        $order->status = $order::STATUS_DELETED;
+        if ($order->save(false, ['status', 'updated_at']))
         {
-            Yii::$app->session->addFlash('success', Yii::t('app', 'Usunięto projekt.'));
+            Yii::$app->session->addFlash('success', Yii::t('app', 'Usunięto zlecenie.'));
             return $this->redirect(['index']);
 
         }

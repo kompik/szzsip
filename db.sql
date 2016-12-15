@@ -12,8 +12,8 @@ CREATE TABLE `user` (
     email VARCHAR(50) NOT NULL,
     auth_key VARCHAR(255),
     status enum('active', 'deleted', 'locked'),
-    created_at TIMESTAMP,
-    updated_at TIMESTAMP,
+    created_at INT(11),
+    updated_at INT(11),
     group_id int,
     type enum('admin', 'supervisor','serviceman', 'client')
 );
@@ -30,8 +30,8 @@ CREATE TABLE `client` (
     city VARCHAR(100),
     email VARCHAR(50) NOT NULL,
     status enum('active', 'deleted', 'locked'),
-    created_at TIMESTAMP,
-    updated_at TIMESTAMP,
+    created_at INT(11),
+    updated_at INT(11),
     type enum('customer', 'company'),
     info VARCHAR(100)
 );
@@ -40,8 +40,8 @@ CREATE TABLE `group` (
     id INT(6) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(30),
     status enum('active', 'deleted', 'locked'),
-    created_at TIMESTAMP,
-    updated_at TIMESTAMP,
+    created_at INT(11),
+    updated_at INT(11),
     owner_id INT(6) UNSIGNED
 );
 
@@ -51,8 +51,8 @@ CREATE TABLE `project` (
     description VARCHAR(500),
     owner_id INT(6) UNSIGNED,
     client_id INT(6) UNSIGNED,
-    created_at TIMESTAMP,
-    updated_at TIMESTAMP,
+    created_at INT(11),
+    updated_at INT(11),
     status enum('new', 'in progress', 'closed')
 );
 
@@ -62,8 +62,8 @@ CREATE TABLE `order` (
     owner_id INT(6) UNSIGNED,
     executive_id INT(6) UNSIGNED,
     client_id INT(6) UNSIGNED,
-    created_at TIMESTAMP,
-    updated_at TIMESTAMP,
+    created_at INT(11),
+    updated_at INT(11),
     status enum('new', 'in progress', 'closed'),
     project_id INT(6) UNSIGNED
 );
@@ -71,17 +71,23 @@ CREATE TABLE `order` (
 CREATE TABLE `project_order` (
     id INT(6) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     order_id INT(6) UNSIGNED,
-    project_id INT(6) UNSIGNED
+    project_id INT(6) UNSIGNED,
+    created_at INT(11),
+    updated_at INT(11),
 );
 
 CREATE TABLE `task` (
     id INT(6) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100),
-    status enum('active', 'deleted')
+    status enum('active', 'deleted'),
+    created_at INT(11),
+    updated_at INT(11),
 );
 
 CREATE TABLE `order_task` (
     id INT(6) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     order_id INT(6) UNSIGNED,
-    task_id INT(6) UNSIGNED
+    task_id INT(6) UNSIGNED,
+    created_at INT(11),
+    updated_at INT(11),
 );

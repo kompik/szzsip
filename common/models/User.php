@@ -6,6 +6,7 @@ use yii\base\NotSupportedException;
 use yii\behaviors\TimestampBehavior;
 use yii\db\ActiveRecord;
 use yii\web\IdentityInterface;
+use common\models\Project;
 
 /**
  * User model
@@ -64,7 +65,6 @@ class User extends ActiveRecord implements IdentityInterface
     {
         return [
             ['status', 'default', 'value' => self::STATUS_ACTIVE],
-            ['status', 'in', 'range' => [self::STATUS_ACTIVE, self::STATUS_DELETED, self::STATUS_LOCKED]],
         ];
     }
 
@@ -224,8 +224,25 @@ class User extends ActiveRecord implements IdentityInterface
         $query = (new \yii\db\Query)->select(['username'])
                     ->from(self::tableName())
                     ->where(['!=', 'status', User::STATUS_DELETED])
+                    ->andWhere(['!=', 'type', User::TYPE_CLIENT])
                     ->indexBy('id')
                     ->column();
         return $query;
+    }
+    
+    public static function findAllUsersClients()
+    {
+        $query = (new \yii\db\Query)->select(['username'])
+                    ->from(self::tableName())
+                    ->where(['!=', 'status', User::STATUS_DELETED])
+                    ->andWhere(['type' => User::TYPE_CLIENT])
+                    ->indexBy('id')
+                    ->column();
+        return $query;
+    }
+    
+    public function getProjects()
+    {
+        return $this->hasMany(Project::className(), ['id' => 'owner_id']);
     }
 }

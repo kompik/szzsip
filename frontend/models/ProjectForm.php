@@ -4,6 +4,7 @@ namespace frontend\models;
 use yii\base\Model;
 use common\models\Project;
 use yii\db\Exception;
+use Yii;
 
 /**
  * Signup form
@@ -14,6 +15,7 @@ class ProjectForm extends Project
     public $owner_id;
     public $client_id;
     public $description;
+    public $status;
 
     /**
      * @inheritdoc
@@ -23,7 +25,7 @@ class ProjectForm extends Project
         return [
             [['name', 'description'], 'string'],
             ['name', 'required'],
-            [['owner_id', 'client_id'], 'integer']
+            [['owner_id', 'client_id', 'status'], 'integer']
         ];
     }
     
@@ -32,10 +34,11 @@ class ProjectForm extends Project
         $project = new Project();
         
         $project->name = $this->name;
-        $project->status = Project::STATUS_NEW;
-        $project->owner_id = \Yii::$app->user->identity->id;
+        $project->status = $this->status ? $this->status : Project::STATUS_NEW;
+        $project->owner_id = $this->owner_id ? $this->owner_id : Yii::$app->user->identity->id;
         $project->client_id = $this->client_id;
         $project->description = $this->description;
+        
         
         if ($project->save(FALSE)){
             return TRUE;

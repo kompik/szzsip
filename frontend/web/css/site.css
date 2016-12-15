@@ -120,6 +120,6 @@ a.desc:after {
 }
 
 #side-nav {
-    position: fixed;
+/*    position: fixed;*/
     margin-top: 55px;
 }

@@ -31,14 +31,13 @@ AppAsset::register($this);
             <?= $this->render('sidebar') ?>
         </div>
 
-        <div class="col-md-8">
-            <div class="container">
+        <div class="col-md-9">
                 <?= Breadcrumbs::widget([
                     'links' => isset($this->params['breadcrumbs']) ? $this->params['breadcrumbs'] : [],
                 ]) ?>
                 <?= Alert::widget() ?>
                 <?= $content ?>
-            </div>
+
         </div>
     </div>
 </div>

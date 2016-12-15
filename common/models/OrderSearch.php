@@ -4,41 +4,50 @@ namespace common\models;
 
 use yii\data\ActiveDataProvider;
 
-class ProjectSearch extends Project // extends from Tour see?
+class OrderSearch extends Order // extends from Tour see?
 {
     // add the public attributes that will be used to store the data to be search
     public $owner;
     public $client;
+    public $executive;
     public $status;
     public $name;
     public $created;
+    public $project;
     
-    public function attributeLabels()
-    {
-        return [
 
-            'Owner' => Yii::t('app', 'Właściciel projektu'),
-        ];
-    }
- 
     // now set the rules to make those attributes safe
     public function rules()
     {
         return [
             // ... more stuff here
-            [['owner', 'client', 'status', 'name', 'created'], 'safe'],
+            [['owner', 'client', 'status', 'name', 'created', 'executive', 'project'], 'safe'],
             // ... more stuff here
+        ];
+    }
+    
+    public function attributeLabels()
+    {
+        return [
+            
+            'owner' => Yii::t('app', 'Właściciel zlecenia'),
+            'client' => Yii::t('app', 'Klient'),
+            'executive' => Yii::t('app', 'Wykonawca'),
+            'status' => Yii::t('app', 'Status'),
+            'name' => Yii::t('app', 'Nazwa'),
+            'created' => Yii::t('app', 'Utworzony'),
+            'project' => Yii::t('app', 'Projekt'),
         ];
     }
 // ... model continues here
     public function search($params)
     {
         // create ActiveQuery
-        $query = Project::find()->having(['<>', 'status', Project::STATUS_DELETED]);
+        $query = Order::find()->having(['<>', 'status', Project::STATUS_DELETED]);
         // Important: lets join the query with our previously mentioned relations
         // I do not make any other configuration like aliases or whatever, feel free
         // to investigate that your self
-        $query->joinWith(['owner', 'client']);
+        $query->joinWith(['owner', 'client', 'project']);
 
         $dataProvider = new ActiveDataProvider([
             'query' => $query,
@@ -57,17 +66,21 @@ class ProjectSearch extends Project // extends from Tour see?
             'asc' => ['user.id' => SORT_ASC],
             'desc' => ['user.id' => SORT_DESC],
         ];
+        $dataProvider->sort->attributes['project'] = [
+            'asc' => ['project.id' => SORT_ASC],
+            'desc' => ['project.id' => SORT_DESC],
+        ];
         $dataProvider->sort->attributes['status'] = [
-            'asc' => ['project.status' => SORT_ASC],
-            'desc' => ['project.status' => SORT_DESC],
+            'asc' => ['order.status' => SORT_ASC],
+            'desc' => ['order.status' => SORT_DESC],
         ];
         $dataProvider->sort->attributes['name'] = [
-            'asc' => ['project.name' => SORT_ASC],
-            'desc' => ['project.name' => SORT_DESC],
+            'asc' => ['order.name' => SORT_ASC],
+            'desc' => ['order.name' => SORT_DESC],
         ];
         $dataProvider->sort->attributes['created'] = [
-            'asc' => ['project.created_at' => SORT_ASC],
-            'desc' => ['project.created_at' => SORT_DESC],
+            'asc' => ['order.created_at' => SORT_ASC],
+            'desc' => ['order.created_at' => SORT_DESC],
         ];
         // No search? Then return data Provider
         if (!($this->load($params) && $this->validate())) {
@@ -78,8 +91,10 @@ class ProjectSearch extends Project // extends from Tour see?
         ])
         ->andFilterWhere(['like', 'client.id', $this->client])
         ->andFilterWhere(['like', 'user.id', $this->owner])
-        ->andFilterWhere(['like', 'project.status', $this->status])
-        ->andFilterWhere(['like', 'project.name', $this->name]);
+        ->andFilterWhere(['like', 'executive.id', $this->executive])
+        ->andFilterWhere(['like', 'project.id', $this->project])
+        ->andFilterWhere(['like', 'order.status', $this->status])
+        ->andFilterWhere(['like', 'order.name', $this->name]);
         
         
         if(isset($this->created) && $this->created!=''){

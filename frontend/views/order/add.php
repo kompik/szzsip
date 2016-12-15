@@ -1,10 +1,10 @@
 <?php
-use frontend\models\ProjectForm;
+use frontend\models\OrderForm;
 use yii\widgets\ActiveForm;
 use yii\helpers\Html;
 use yii\web\View;
 
-/* @var $projectForm ProjectForm */
+/* @var $orderForm OrderForm */
 /* @var $this View*/
 
 $this->title = 'Dodaj projekt';
@@ -12,9 +12,10 @@ $this->params['breadcrumbs'][] = $this->title;
 ?>
 
 <?= $this->render('_form', [
-    'projectForm' => $projectForm,
+    'orderForm' => $orderForm,
     'userList'  => $userList,
     'clientsList'    => $clientsList,
-    'projectStatus' => $projectStatus
+    'orderStatus' => $orderStatus,
+    'projects' => $projects
         ])?>
 
