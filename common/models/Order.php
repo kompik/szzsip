@@ -5,11 +5,14 @@ namespace common\models;
 use Yii;
 use yii\base\NotSupportedException;
 use yii\behaviors\TimestampBehavior;
+use yii\behaviors\BlameableBehavior;
 use yii\db\ActiveRecord;
 use common\models\User;
 use common\models\Client;
 use common\models\Project;
 use yii\db\Expression;
+use yii\db\Query;
+use yii\db\Connection;
 
 /**
  * Order model
@@ -36,7 +39,14 @@ class Order extends Project
     {
         return '{{%order}}';
     }
-
+    
+    public function behaviors()
+    {
+        return [
+            TimestampBehavior::className(),
+            BlameableBehavior::className(),
+        ];
+    }
 
     /**
      * @inheritdoc
@@ -44,7 +54,10 @@ class Order extends Project
     public function rules()
     {
         $rules = [
-            [['executive_id', 'project_id'], 'integer']
+            [['executive_id', 'project_id'], 'integer'],
+            ['name', 'string'],
+            ['name', 'unique', 'message' => 'Zlecenie o takiej nazwie już istnieje'],
+            ['description', 'string', 'max' => 255]
         ];
         return array_merge($rules, parent::rules());
     }
@@ -59,7 +72,10 @@ class Order extends Project
             'status' => Yii::t('app', 'Status'),
             'description' => Yii::t('app', 'Opis'),
             'created_at' => Yii::t('app', 'Utworzony'),
-            'project_id' => Yii::t('app', 'Projekt')
+            'project_id' => Yii::t('app', 'Projekt'),
+            'owner' => Yii::t('app', 'Właściciel zlecenia'),
+            'client' => Yii::t('app', 'Klient'),
+            'project' => Yii::t('app', 'Projekt'),
         ];
     }
     
@@ -78,15 +94,18 @@ class Order extends Project
         return $this->hasOne(Project::className(), ['id' => 'project_id']);
     }
     
-    public static function getAllOrdersNames()
+    public static function getAllOrdersNames($id = false, $index)
     {
         $query = (new \yii\db\Query)->select(['name'])
                     ->from(self::tableName())
-                    ->where(['!=', 'status', self::STATUS_DELETED])
-                    ->indexBy('name')
-                    ->orderBy('name')
-                    ->column();
-        return $query;
+                    ->where(['!=', 'status', self::STATUS_DELETED]);
+        if ($id) {
+            $query->andWhere(['project_id' => $id]);
+        }
+        $query->indexBy($index)->orderBy('name');
+        return $query->column();  
     }
+    
+
     
 }
