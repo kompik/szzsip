@@ -4,21 +4,20 @@ use yii\helpers\Html;
 use yii\helpers\Url;
 use yii\web\View;
 use common\models\Order;
-use common\models\Project;
-use common\models\User;
+use common\models\Task;
+use common\models\TaskSearch;
 use yii\data\ActiveDataProvider;
 use kartik\grid\GridView;
-use kartik\mpdf\Pdf;
 
 /* @var $this View */
 /* @var $orders Order[] */
 /* @var $dataProvider ActiveDataProvider*/
 
-$this->title = 'Zlecenia';
+$this->title = 'Zadania';
 $this->params['breadcrumbs'][] = $this->title;
 $user = Yii::$app->user->isGuest ? : Yii::$app->user->identity;
-$deleteButton = $user->isAdmin() || $user->isSupervisor() ? Html::a(Yii::t('app', '<i class="glyphicon glyphicon-minus"></i> Usuń zaznaczone zlecenia'), Url::to(['add']), ['class' => 'btn btn-danger']) : '';
-
+$deleteButton = $user->isAdmin() || $user->isSupervisor() ? Html::a(Yii::t('app', '<i class="glyphicon glyphicon-minus"></i> Usuń zaznaczone zadania'), Url::to(['add']), ['class' => 'btn btn-danger']) : '';
+$addToTaskButton = Html::a(Yii::t('app', '<i class="glyphicon glyphicon-plus"></i> Dodaj zaznaczone zadania do zlecenia'), Url::to(['add']), ['class' => 'btn btn-success']);
 ?>
 
 <div class="site-index">
@@ -26,11 +25,12 @@ $deleteButton = $user->isAdmin() || $user->isSupervisor() ? Html::a(Yii::t('app'
         <?= GridView::widget([
             'panel'=>[
                 'type'=>GridView::TYPE_PRIMARY,
-                'heading'=>'<i class="glyphicon glyphicon-list"></i> Zlecenia',
+                'heading'=>'<i class="glyphicon glyphicon-th"></i> Zadania',
             ],'toolbar' => [
                 [
                     'content'=>
-                        Html::a('<i class="glyphicon glyphicon-plus"></i> Dodaj zlecenie', Url::to(['add']), ['class' => 'btn btn-success']). ' ' .
+                        Html::a('<i class="glyphicon glyphicon-plus"></i> Dodaj zadanie', Url::to(['add']), ['class' => 'btn btn-success']). ' ' .
+                        $addToTaskButton. ' '.
                         $deleteButton. ' '.
                         Html::a('<i class="glyphicon glyphicon-repeat"></i> Resetuj widok', ['index'], [
                             'class' => 'btn btn-default', 
@@ -57,7 +57,7 @@ $deleteButton = $user->isAdmin() || $user->isSupervisor() ? Html::a(Yii::t('app'
                     'class' => '\kartik\grid\DataColumn',
                     'filterType' => GridView::FILTER_SELECT2,
                     'filterWidgetOptions' => [
-                        'data' => $orderNames,
+                        'data' => $tasksNames,
                         'options' => [
                             'placeholder' => 'filtruj po nazwie ...',
                             'initValueText' => ''
@@ -86,39 +86,17 @@ $deleteButton = $user->isAdmin() || $user->isSupervisor() ? Html::a(Yii::t('app'
                             'allowClear' => true
                         ]
                     ],
-                    'attribute' => 'owner',
+                    'attribute' => 'creator',
                     'format' => 'raw',
                     'value' => function($model){
-                        return Html::a($model->owner->username, Url::to(['/user/view', 'id' => $model->owner_id]), ['data-pjax' => 0]);
+                        return Html::a($model->creator->username, Url::to(['/user/view', 'id' => $model->created_by]), ['data-pjax' => 0]);
                     },
                 ],
                 [
                     'class' => '\kartik\grid\DataColumn',
                     'filterType' => GridView::FILTER_SELECT2,
                     'filterWidgetOptions' => [
-                        'data' => $clientsList,
-                        'options' => [
-                            'placeholder' => 'filtruj po kliencie ...',
-                            'initValueText' => ''
-                            ],
-                        'pluginOptions' => [
-                            'allowClear' => true
-                        ]
-                    ],
-                    'attribute' => 'client',
-                    'format' => 'raw',
-                    'value' => function($model){
-                        if ($model->client){
-                            return Html::a($model->client->acronym, Url::to(['/client/view', 'id' => $model->client_id]), ['data-pjax' => 0]);
-                        }
-                        return 'brak';
-                    },
-                ],
-                [
-                    'class' => '\kartik\grid\DataColumn',
-                    'filterType' => GridView::FILTER_SELECT2,
-                    'filterWidgetOptions' => [
-                        'data' => Order::listStatuses(),
+                        'data' => Task::listStatuses(),
                         'options' => [
                             'placeholder' => 'filtruj po statusie ...',
                             'initValueText' => ''
@@ -129,27 +107,8 @@ $deleteButton = $user->isAdmin() || $user->isSupervisor() ? Html::a(Yii::t('app'
                     ],
                     'attribute' => 'status',
                     'value' => function($model) {
-                                    return Order::listStatuses()[$model->status];
+                                    return Task::listStatuses()[$model->status];
                                 },
-                ],
-                [
-                    'class' => '\kartik\grid\DataColumn',
-                    'filterType' => GridView::FILTER_SELECT2,
-                    'filterWidgetOptions' => [
-                        'data' => $projects,
-                        'options' => [
-                            'placeholder' => 'filtruj po projekcie ...',
-                            'initValueText' => ''
-                            ],
-                        'pluginOptions' => [
-                            'allowClear' => true
-                        ]
-                    ],
-                    'attribute' => 'project',
-                    'format' => 'raw',
-                    'value' => function($model){
-                        return Html::a($model->project->getShortName(), Url::to(['/project/view', 'id' => $model->project_id]), ['data-pjax' => 0, 'title' => $model->project->name]);
-                    },
                 ],
                 [
                     'class' => '\kartik\grid\DataColumn',
@@ -173,6 +132,7 @@ $deleteButton = $user->isAdmin() || $user->isSupervisor() ? Html::a(Yii::t('app'
                 [
                     'class' => '\kartik\grid\ActionColumn',
                     'deleteOptions' => ['label' => '<i class="glyphicon glyphicon-remove"></i>'],
+                    'header' => 'Akcje',
                     'viewOptions' => [
                         'title' => 'Pokaż szczegóły'
                     ],

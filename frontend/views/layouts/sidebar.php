@@ -3,10 +3,12 @@
 use yii\helpers\Html;
 use yii\helpers\Url;
 use kartik\sidenav\SideNav;
+use yii\widgets\Pjax;
 
 $user = Yii::$app->user->isGuest ? : Yii::$app->user->identity;
 ?>
 
+<div class='pjax-clock'><p>&nbsp;</p><p>&nbsp;</p></div>
 <div class="nav" id="side-nav">
     <?php
     
@@ -31,6 +33,10 @@ $user = Yii::$app->user->isGuest ? : Yii::$app->user->identity;
                     'active' => $this->context->id == 'project'],
                 ['label' => 'Zlecenia', 'icon' => 'list', 'url' => Url::to(['/order/index']),
                     'active' => $this->context->id == 'order'],
+                ['label' => 'Zadania', 'icon' => 'th', 'url' => Url::to(['/task/index']),
+                    'active' => $this->context->id == 'task'],
+                ['label' => 'Klienci', 'icon' => 'king', 'url' => Url::to(['/client/index']),
+                    'active' => $this->context->id == 'client'],
                 ['label' => 'Użytkownicy', 'icon' => 'user', 'url' => Url::to(['/profile/index']),
                     'active' => $this->context->id == 'profile',
                     'visible' => $user->isAdmin() || $user->isSupervisor()],

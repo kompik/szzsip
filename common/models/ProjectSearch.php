@@ -12,6 +12,7 @@ class ProjectSearch extends Project // extends from Tour see?
     public $status;
     public $name;
     public $created;
+    public $orders;
     
     public function attributeLabels()
     {
@@ -26,7 +27,7 @@ class ProjectSearch extends Project // extends from Tour see?
     {
         return [
             // ... more stuff here
-            [['owner', 'client', 'status', 'name', 'created'], 'safe'],
+            [['owner', 'client', 'status', 'name', 'created', 'orders'], 'safe'],
             // ... more stuff here
         ];
     }
@@ -38,7 +39,7 @@ class ProjectSearch extends Project // extends from Tour see?
         // Important: lets join the query with our previously mentioned relations
         // I do not make any other configuration like aliases or whatever, feel free
         // to investigate that your self
-        $query->joinWith(['owner', 'client']);
+        $query->joinWith(['owner', 'client', 'orders']);
 
         $dataProvider = new ActiveDataProvider([
             'query' => $query,
@@ -69,6 +70,11 @@ class ProjectSearch extends Project // extends from Tour see?
             'asc' => ['project.created_at' => SORT_ASC],
             'desc' => ['project.created_at' => SORT_DESC],
         ];
+        
+        $dataProvider->sort->attributes['orders'] = [
+            'asc' => ['orders.id' => SORT_ASC],
+            'desc' => ['orders.id' => SORT_DESC],
+        ];
         // No search? Then return data Provider
         if (!($this->load($params) && $this->validate())) {
             return $dataProvider;
@@ -79,7 +85,8 @@ class ProjectSearch extends Project // extends from Tour see?
         ->andFilterWhere(['like', 'client.id', $this->client])
         ->andFilterWhere(['like', 'user.id', $this->owner])
         ->andFilterWhere(['like', 'project.status', $this->status])
-        ->andFilterWhere(['like', 'project.name', $this->name]);
+        ->andFilterWhere(['like', 'project.name', $this->name])
+        ->andFilterWhere(['like', 'orders.id', $this->order]);
         
         
         if(isset($this->created) && $this->created!=''){

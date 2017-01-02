@@ -4,16 +4,14 @@ namespace common\models;
 
 use yii\data\ActiveDataProvider;
 
-class OrderSearch extends Order // extends from Tour see?
+class TaskSearch extends Task
 {
+
     // add the public attributes that will be used to store the data to be search
-    public $owner;
-    public $client;
-    public $executive;
+    public $creator;
     public $status;
     public $name;
     public $created;
-    public $project;
     
 
     // now set the rules to make those attributes safe
@@ -21,7 +19,7 @@ class OrderSearch extends Order // extends from Tour see?
     {
         return [
             // ... more stuff here
-            [['owner', 'client', 'status', 'name', 'created', 'executive', 'project'], 'safe'],
+            [['creator', 'status', 'name', 'created'], 'safe'],
             // ... more stuff here
         ];
     }
@@ -30,7 +28,7 @@ class OrderSearch extends Order // extends from Tour see?
     {
         return [
             
-            'owner' => Yii::t('app', 'Właściciel zlecenia'),
+            'creator' => Yii::t('app', 'Właściciel zlecenia'),
             'client' => Yii::t('app', 'Klient'),
             'executive' => Yii::t('app', 'Wykonawca'),
             'status' => Yii::t('app', 'Status'),
@@ -43,14 +41,14 @@ class OrderSearch extends Order // extends from Tour see?
     public function search($params, $id = null)
     {
         // create ActiveQuery
-        $query = Order::find()->having(['<>', 'status', Project::STATUS_DELETED]);
-        if ($id) {
-            $query->andHaving(['project_id' => $id]);
-        }
+        $query = Task::find()->having(['<>', 'status', Task::STATUS_DELETED]);
         // Important: lets join the query with our previously mentioned relations
         // I do not make any other configuration like aliases or whatever, feel free
         // to investigate that your self
-        $query->joinWith(['owner', 'client', 'project']);
+        $query->joinWith('creator');
+        if ($id) {
+            $query->where(['order_id' => $id])->joinWith('orders');
+        }
 
         $dataProvider = new ActiveDataProvider([
             'query' => $query,
@@ -58,32 +56,22 @@ class OrderSearch extends Order // extends from Tour see?
 
         // Important: here is how we set up the sorting
         // The key is the attribute name on our "TourSearch" instance
-        $dataProvider->sort->attributes['client'] = [
-            // The tables are the ones our relation are configured to
-            // in my case they are prefixed with "tbl_"
-            'asc' => ['client.id' => SORT_ASC],
-            'desc' => ['client.id' => SORT_DESC],
-        ];
 
-        $dataProvider->sort->attributes['owner'] = [
+        $dataProvider->sort->attributes['creator'] = [
             'asc' => ['user.id' => SORT_ASC],
             'desc' => ['user.id' => SORT_DESC],
         ];
-        $dataProvider->sort->attributes['project'] = [
-            'asc' => ['project.id' => SORT_ASC],
-            'desc' => ['project.id' => SORT_DESC],
-        ];
         $dataProvider->sort->attributes['status'] = [
-            'asc' => ['order.status' => SORT_ASC],
-            'desc' => ['order.status' => SORT_DESC],
+            'asc' => ['task.status' => SORT_ASC],
+            'desc' => ['task.status' => SORT_DESC],
         ];
         $dataProvider->sort->attributes['name'] = [
-            'asc' => ['order.name' => SORT_ASC],
-            'desc' => ['order.name' => SORT_DESC],
+            'asc' => ['task.name' => SORT_ASC],
+            'desc' => ['task.name' => SORT_DESC],
         ];
         $dataProvider->sort->attributes['created'] = [
-            'asc' => ['order.created_at' => SORT_ASC],
-            'desc' => ['order.created_at' => SORT_DESC],
+            'asc' => ['task.created_at' => SORT_ASC],
+            'desc' => ['task.created_at' => SORT_DESC],
         ];
         // No search? Then return data Provider
         if (!($this->load($params) && $this->validate())) {
@@ -92,12 +80,9 @@ class OrderSearch extends Order // extends from Tour see?
         
         $query->andFilterWhere([
         ])
-        ->andFilterWhere(['like', 'client.id', $this->client])
-        ->andFilterWhere(['like', 'user.id', $this->owner])
-        ->andFilterWhere(['like', 'executive.id', $this->executive])
-        ->andFilterWhere(['like', 'project.id', $this->project])
-        ->andFilterWhere(['like', 'order.status', $this->status])
-        ->andFilterWhere(['like', 'order.name', $this->name]);
+        ->andFilterWhere(['like', 'user.id', $this->creator])
+        ->andFilterWhere(['like', 'task.status', $this->status])
+        ->andFilterWhere(['like', 'task.name', $this->name]);
         
         
         if(isset($this->created) && $this->created!=''){

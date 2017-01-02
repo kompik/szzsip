@@ -13,6 +13,8 @@ use common\models\User;
 use common\models\ProjectSearch;
 use common\models\Client;
 use frontend\models\ProjectForm;
+use common\models\OrderSearch;
+use common\models\Order;
 use Exception;
 use yii\db\Query;
 use yii\helpers\Url;
@@ -32,7 +34,7 @@ class ProjectController extends Controller
         return [
             'access' => [
                 'class' => AccessControl::className(),
-                'only' => ['index', 'add', 'edit', 'delete'],
+                'only' => ['index', 'add', 'edit', 'delete', 'view'],
                 'rules' => [
                     [
                         'actions' => [],
@@ -40,7 +42,7 @@ class ProjectController extends Controller
                         'roles' => ['?'],
                     ],
                     [
-                        'actions' => ['index', 'add', 'edit', 'delete'],
+                        'actions' => ['index', 'add', 'edit', 'delete', 'view'],
                         'allow' => true,
                         'roles' => ['@'],
                     ],
@@ -119,6 +121,27 @@ class ProjectController extends Controller
                 ]);
     }
     
+    public function actionView($id)
+    {
+        $project = Project::findOne([$id]);
+        $searchModel = new OrderSearch();
+        $dataProvider = $searchModel->search(Yii::$app->request->queryParams, $id);
+        $userList = User::findAllUsers();
+        $clientsList = Client::findAllClients();
+        $orderNames = Order::getAllOrdersNames($id, 'name');
+        $orders = $project->orders;
+        
+        return $this->render('view', [
+            'project' => $project,
+            'searchModel' => $searchModel,
+            'dataProvider' => $dataProvider,
+            'userList' => $userList,
+            'clientsList' => $clientsList,
+            'orderNames' => $orderNames,
+            'orders' => $orders
+                ]);
+    }
+
     public function actionAdd()
     {
         $projectForm = new ProjectForm();

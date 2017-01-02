@@ -7,7 +7,7 @@ use yii\web\View;
 /* @var $orderForm OrderForm */
 /* @var $this View*/
 
-$this->title = 'Dodaj projekt';
+$this->title = 'Dodaj zlecenie';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 

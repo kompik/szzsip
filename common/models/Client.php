@@ -4,6 +4,7 @@ namespace common\models;
 use Yii;
 use yii\base\NotSupportedException;
 use yii\behaviors\TimestampBehavior;
+use yii\behaviors\BlameableBehavior;
 use yii\db\ActiveRecord;
 use yii\web\IdentityInterface;
 use common\models\Project;
@@ -54,6 +55,7 @@ class Client extends ActiveRecord
     {
         return [
             TimestampBehavior::className(),
+            BlameableBehavior::className(),
         ];
     }
 
@@ -64,7 +66,11 @@ class Client extends ActiveRecord
     {
         return [
             ['status', 'default', 'value' => self::STATUS_ACTIVE],
-            [['acronym', 'firstname'], 'required']
+            [['acronym', 'firstname'], 'required'],
+            ['acronym', 'unique', 'message' => 'Klient o takim akronimie już istnieje'],
+            ['nip', 'unique', 'message' => 'Klient o takim numerze NIP już istnieje'],
+            [['firstname', 'lastname', 'acronym', 'street', 'street_no', 'postcode', 'city'], 'string'],
+            ['email', 'email']
         ];
     }
     
@@ -84,7 +90,7 @@ class Client extends ActiveRecord
             'info' => Yii::t('app', 'Opis'),
             'created_at' => Yii::t('app', 'Utworzony'),
             'updated_at' => Yii::t('app', 'Edytowany'),
-            'type' => Yii::t('app', 'Typ')
+            'type' => Yii::t('app', 'Typ'),
         ];
     }
 

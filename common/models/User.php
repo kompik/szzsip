@@ -4,9 +4,11 @@ namespace common\models;
 use Yii;
 use yii\base\NotSupportedException;
 use yii\behaviors\TimestampBehavior;
+use yii\behaviors\BlameableBehavior;
 use yii\db\ActiveRecord;
 use yii\web\IdentityInterface;
 use common\models\Project;
+use common\models\Task;
 
 /**
  * User model
@@ -55,6 +57,7 @@ class User extends ActiveRecord implements IdentityInterface
     {
         return [
             TimestampBehavior::className(),
+            BlameableBehavior::className(),
         ];
     }
 
@@ -65,6 +68,8 @@ class User extends ActiveRecord implements IdentityInterface
     {
         return [
             ['status', 'default', 'value' => self::STATUS_ACTIVE],
+            [['username', 'email'], 'unique'],
+            ['email', 'email']
         ];
     }
 
@@ -219,15 +224,17 @@ class User extends ActiveRecord implements IdentityInterface
         return $this->type == self::TYPE_CLIENT;
     }
     
-    public static function findAllUsers()
+    public static function findAllUsers($condition = false)
     {
         $query = (new \yii\db\Query)->select(['username'])
                     ->from(self::tableName())
                     ->where(['!=', 'status', User::STATUS_DELETED])
-                    ->andWhere(['!=', 'type', User::TYPE_CLIENT])
-                    ->indexBy('id')
-                    ->column();
-        return $query;
+                    ->andWhere(['!=', 'type', User::TYPE_CLIENT]);
+        if ($condition){
+            $query->andWhere($condition);
+        }
+        $query->indexBy('id');
+        return $query->column();
     }
     
     public static function findAllUsersClients()
@@ -244,5 +251,10 @@ class User extends ActiveRecord implements IdentityInterface
     public function getProjects()
     {
         return $this->hasMany(Project::className(), ['id' => 'owner_id']);
+    }
+    
+    public function getTasks()
+    {
+        return $this->hasMany(Task::className(), ['id' => 'created_by']);
     }
 }

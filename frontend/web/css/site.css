@@ -121,5 +121,19 @@ a.desc:after {
 
 #side-nav {
 /*    position: fixed;*/
-    margin-top: 55px;
+    /*margin-top: 55px;*/
+}
+
+.view-left {
+    float: left;
+    margin-right: 10px;
+    width: 15%;
+}
+
+.specs-col-sm-2 > .col-sm-2 {
+    width: 20%;
+}
+
+.pjax-clock{
+    margin-left: 30px;
 }

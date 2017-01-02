@@ -1,36 +1,77 @@
-<?php //
-
+<?php
+use common\models\Project;
+use yii\widgets\ActiveForm;
 use yii\helpers\Html;
 use yii\helpers\Url;
 use yii\web\View;
 use common\models\Order;
-use common\models\Project;
+use common\models\OrderSearch;
 use common\models\User;
 use yii\data\ActiveDataProvider;
 use kartik\grid\GridView;
 use kartik\mpdf\Pdf;
 
-/* @var $this View */
+/* @var $project Project */
+/* @var $this View*/
 /* @var $orders Order[] */
 /* @var $dataProvider ActiveDataProvider*/
 
-$this->title = 'Zlecenia';
+$this->title = 'Projekt '.$project->name;
 $this->params['breadcrumbs'][] = $this->title;
 $user = Yii::$app->user->isGuest ? : Yii::$app->user->identity;
 $deleteButton = $user->isAdmin() || $user->isSupervisor() ? Html::a(Yii::t('app', '<i class="glyphicon glyphicon-minus"></i> Usuń zaznaczone zlecenia'), Url::to(['add']), ['class' => 'btn btn-danger']) : '';
-
 ?>
-
-<div class="site-index">
+<div class="col-sm-12">
+    <div class="row">
+        <?=    Html::a(Yii::t('app', '<i class="glyphicon glyphicon-plus"></i> Dodaj zlecenie do projektu'), ['/order/add', 'project_id' => $project->id], ['class' => 'btn btn-success'])?>
+       <hr> 
+    </div>
+    
+    <div class="row">
+        <div class="col-sm-12">
+            <label class=""><?= $project->getAttributeLabel('name') ?></label>
+            <div><?= $project->name ?></div>
+            <hr>
+        </div>
         
+        <div class="col-sm-12">
+            <label><?= $project->getAttributeLabel('description') ?></label>
+            <div><?= $project->description ?></div>
+            <hr>
+        </div>
+    </div>
+    
+
+    <div class="row">
+        <div class="col-sm-3">
+            <label><?= $project->getAttributeLabel('client_id') ?></label>
+            <div><?= Html::a($project->client->acronym, Url::to(['/client/view', 'id' => $project->client_id])) ?></div><hr>
+        </div>
+        <div class="col-sm-3">
+            <label><?= $project->getAttributeLabel('owner_id') ?></label>
+            <div><?= Html::a($project->owner->username, Url::to(['/user/view', 'id' => $project->owner_id])) ?></div><hr>
+        </div>
+
+        <div class="col-sm-3">
+            <label><?= $project->getAttributeLabel('created_at') ?></label>
+            <div><?= date('d-m-Y H:i', $project->created_at) ?></div><hr>
+        </div>
+
+        <div class="col-sm-3">
+            <label><?= $project->getAttributeLabel('status') ?></label>
+            <div><?= Project::listStatuses()[$project->status] ?></div><hr>
+        </div>
+    </div>
+    
+    <div class="row">
         <?= GridView::widget([
             'panel'=>[
                 'type'=>GridView::TYPE_PRIMARY,
-                'heading'=>'<i class="glyphicon glyphicon-list"></i> Zlecenia',
+                'heading'=>'<i class="glyphicon glyphicon-list"></i> Zlecenia projektu',
             ],'toolbar' => [
                 [
                     'content'=>
-                        Html::a('<i class="glyphicon glyphicon-plus"></i> Dodaj zlecenie', Url::to(['add']), ['class' => 'btn btn-success']). ' ' .
+                        Html::a('<i class="glyphicon glyphicon-plus"></i> Dodaj zlecenie', Url::to(['/order/add', 'id' => $project->id]), ['class' => 'btn btn-success']). ' ' .
                         $deleteButton. ' '.
                         Html::a('<i class="glyphicon glyphicon-repeat"></i> Resetuj widok', ['index'], [
                             'class' => 'btn btn-default', 
@@ -68,9 +109,10 @@ $deleteButton = $user->isAdmin() || $user->isSupervisor() ? Html::a(Yii::t('app'
                         ]
                     ],
                     'attribute' => 'name',
+//                    'value' => 'orders.id'
                     'format' => 'raw',
                     'value' => function($model){
-                        return Html::a($model->getShortName(), Url::to(['view', 'id' => $model->id]), ['data-pjax' => 0, 'title' => $model->name]);
+                        return Html::a(Yii::t('app', $model->name), Url::to(['/order/view', 'id' => $model->id]), ['data-pjax' => 0, 'title' => $model->name]);
                     }
                 ],
                 [
@@ -134,25 +176,6 @@ $deleteButton = $user->isAdmin() || $user->isSupervisor() ? Html::a(Yii::t('app'
                 ],
                 [
                     'class' => '\kartik\grid\DataColumn',
-                    'filterType' => GridView::FILTER_SELECT2,
-                    'filterWidgetOptions' => [
-                        'data' => $projects,
-                        'options' => [
-                            'placeholder' => 'filtruj po projekcie ...',
-                            'initValueText' => ''
-                            ],
-                        'pluginOptions' => [
-                            'allowClear' => true
-                        ]
-                    ],
-                    'attribute' => 'project',
-                    'format' => 'raw',
-                    'value' => function($model){
-                        return Html::a($model->project->getShortName(), Url::to(['/project/view', 'id' => $model->project_id]), ['data-pjax' => 0, 'title' => $model->project->name]);
-                    },
-                ],
-                [
-                    'class' => '\kartik\grid\DataColumn',
                     'filterType' => GridView::FILTER_DATE_RANGE,
                     'attribute' => 'created_at',
                     'filterWidgetOptions' => [
@@ -187,12 +210,5 @@ $deleteButton = $user->isAdmin() || $user->isSupervisor() ? Html::a(Yii::t('app'
             'showPageSummary' => true,
 
         ]) ?>
+    </div>
 </div>
-
-<script type="text/javascript">
-function apply_filter() {
-
-$('.grid-view').yiiGridView('applyFilter');
-
-}
-</script>

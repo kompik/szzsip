@@ -14,6 +14,11 @@ use common\models\OrderSearch;
 use common\models\Client;
 use common\models\Order;
 use frontend\models\OrderForm;
+use common\models\TaskSearch;
+use common\models\Task;
+use common\models\OrderTask;
+use common\models\OrderTaskSearch;
+use frontend\models\Task2OrderForm;
 use Exception;
 use yii\db\Query;
 use yii\helpers\Url;
@@ -33,7 +38,7 @@ class OrderController extends Controller
         return [
             'access' => [
                 'class' => AccessControl::className(),
-                'only' => ['index', 'add', 'edit', 'delete'],
+                'only' => ['index', 'add', 'edit', 'delete', 'add-task-to-order'],
                 'rules' => [
                     [
                         'actions' => [],
@@ -41,7 +46,7 @@ class OrderController extends Controller
                         'roles' => ['?'],
                     ],
                     [
-                        'actions' => ['index', 'add', 'edit', 'delete'],
+                        'actions' => ['index', 'add', 'edit', 'delete', 'add-task-to-order'],
                         'allow' => true,
                         'roles' => ['@'],
                     ],
@@ -110,7 +115,7 @@ class OrderController extends Controller
         $dataProvider = $searchModel->search(Yii::$app->request->queryParams);
         $userList = User::findAllUsers();
         $clientsList = Client::findAllClients();
-        $orderNames = Order::getAllOrdersNames();
+        $orderNames = Order::getAllOrdersNames(false, 'name');
         $projects = Project::getAllProjects();
         return $this->render('index', [
             'dataProvider' => $dataProvider,
@@ -119,6 +124,24 @@ class OrderController extends Controller
             'clientsList' => $clientsList,
             'orderNames' => $orderNames,
             'projects' => $projects
+                ]);
+    }
+    
+    public function actionView($id)
+    {
+        $order = Order::findOne([$id]);
+        $searchModel = new OrderTaskSearch();
+        $dataProvider = $searchModel->search(Yii::$app->request->queryParams, $id);
+        $userList = User::findAllUsers();
+        $tasksNames = Task::getAllTasksNames($id);
+        $user = \Yii::$app->user->identity;
+        return $this->render('view', [
+            'order' => $order,
+            'dataProvider' => $dataProvider,
+            'searchModel' => $searchModel,
+            'userList' => $userList,
+            'tasksNames' => $tasksNames,
+            'user' => $user
                 ]);
     }
     
@@ -157,7 +180,7 @@ class OrderController extends Controller
     
     public function actionUpdate($id)
     {
-        $order = Order::findOne($id);
+        $order = Order::findOne([$id]);
         
         if ($order->load(Yii::$app->request->post()) && $order->save())
         {
@@ -180,15 +203,60 @@ class OrderController extends Controller
     
     public function actionDelete($id)
     {
-        $order = Order::findOne($id);
+        $order = Order::findOne([$id]);
         
-        $order->status = $order::STATUS_DELETED;
-        if ($order->save(false, ['status', 'updated_at']))
+        $order->status = Order::STATUS_DELETED;
+        if ($order->save(false, ['status', 'updated_at', 'updated_by']))
         {
             Yii::$app->session->addFlash('success', Yii::t('app', 'Usunięto zlecenie.'));
             return $this->redirect(['index']);
-
         }
+            Yii::$app->session->addFlash('error', Yii::t('app', 'Nie udało się usunąć zlecenia!'));
+            return $this->redirect(['index']);
     }
     
+    public function actionAddTaskToOrder($order_id = null, $task_id = null)
+    {
+        $order = $order_id ? Order::findOne([$order_id]) : new Order();
+        $task = $task_id ? Task::findOne($task_id) : new Task();
+        $task2order = new Task2OrderForm();
+        
+        if ($task2order->load(Yii::$app->request->post()) && $task2order->validate()){
+            $transaction = Yii::$app->db->beginTransaction();
+            try {
+                $task2order->addTask2Order();
+                $transaction->commit();
+                Yii::$app->session->addFlash('success', Yii::t('app', 'Dodano zadania do zlecenia'));
+                return $this->redirect(['view', 'id' => $task2order->order_id]);
+
+            }
+            catch (ActionException $ex){
+                $transaction->rollBack();
+                $task2order->addError('name', $ex->getMessage());
+            }                   
+            catch (Exception $ex) {
+                $transaction->rollBack();
+                Yii::$app->session->addFlash('error', $ex->getMessage());
+            }
+        }
+
+        $tasksList = Task::getAllTasksNames();
+        $ordersList = Order::getAllOrdersNames(false, 'id');
+        return $this->render('add-task-to-order', [
+            'order' => $order,
+            'task'  => $task,
+            'task2order' => $task2order,
+            'tasksList' => $tasksList,
+            'ordersList' => $ordersList
+        ]);
+    }
+    
+    public function actionRemoveTask($id)
+    {
+        $orderTask = OrderTask::findOne($id);
+        if ($orderTask->delete()){
+            Yii::$app->session->addFlash('success', Yii::t('app', 'Usunięto zadanie ze zlecenia'));
+            return $this->redirect(['view', 'id' => $orderTask->order_id]);
+        }
+    }
 }

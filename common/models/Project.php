@@ -1,10 +1,11 @@
-<?php
+<?php //
 
 namespace common\models;
 
 use Yii;
 use yii\base\NotSupportedException;
 use yii\behaviors\TimestampBehavior;
+use yii\behaviors\BlameableBehavior;
 use yii\db\ActiveRecord;
 use common\models\User;
 use common\models\Client;
@@ -21,6 +22,8 @@ use yii\db\Expression;
  * @property integer $updated_at
  * @property string $status
  * @property string $description
+ * 
+
  */
 
 class Project extends ActiveRecord
@@ -44,7 +47,8 @@ class Project extends ActiveRecord
     public function behaviors()
     {
         return [
-                'class' => TimestampBehavior::className(),
+            TimestampBehavior::className(),
+            BlameableBehavior::className(),
         ];
     }
 
@@ -55,8 +59,10 @@ class Project extends ActiveRecord
     {
         return [
             ['status', 'default', 'value' => self::STATUS_NEW],
+            ['name', 'required', 'message' => 'Nazwa nie może zostać pusta'],
             [['name', 'description'], 'string'],
-            [['status', 'owner_id', 'client_id', 'created_at', 'updated_at'], 'integer']
+            [['status', 'owner_id', 'client_id', 'created_at', 'updated_at', 'created_by', 'updated_by'], 'integer'],
+            ['name', 'unique', 'message' => 'Projekt o takiej nazwie już istnieje']
         ];
     }
     
@@ -65,7 +71,9 @@ class Project extends ActiveRecord
         return [
             'name' => Yii::t('app', 'Nazwa'),
             'owner_id' => Yii::t('app', 'Właściciel projektu'),
+            'owner' => Yii::t('app', 'Właściciel projektu'),
             'client_id' => Yii::t('app', 'Klient'),
+            'client' => Yii::t('app', 'Klient'),
             'status' => Yii::t('app', 'Status'),
             'description' => Yii::t('app', 'Opis'),
             'created_at' => Yii::t('app', 'Utworzony')
@@ -105,7 +113,7 @@ class Project extends ActiveRecord
     
     public function getOrders()
     {
-        return $this->hasMany(Order::className(), ['id' => 'project_id']);
+        return $this->hasMany(Order::className(), ['project_id' => 'id']);
     }
     
     public static function getAllProjects()
@@ -117,5 +125,13 @@ class Project extends ActiveRecord
             ->orderBy('name')
             ->column();
         return $query;
+    }
+    
+    public function getShortName()
+    {
+       if (strlen($this->name) > 25){
+           return substr($this->name, 0, 22).'...';
+       }
+       return $this->name;
     }
 }

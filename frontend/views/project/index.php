@@ -16,14 +16,32 @@ use kartik\mpdf\Pdf;
 $this->title = 'Projekty';
 $this->params['breadcrumbs'][] = $this->title;
 $user = Yii::$app->user->isGuest ? : Yii::$app->user->identity;
-$deleteButton = $user->isAdmin() || $user->isSupervisor() ? Html::a(Yii::t('app', 'Usuń zaznaczone projekty'), Url::to(['add']), ['class' => 'btn btn-danger']) : '';
+$deleteButton = $user->isAdmin() || $user->isSupervisor() ? Html::a(Yii::t('app', '<i class="glyphicon glyphicon-minus"></i> Usuń zaznaczone projekty'), Url::to(['add']), ['class' => 'btn btn-danger']) : '';
 
 ?>
 
 <div class="site-index">
         
         <?= GridView::widget([
-            'pjax'=>true,
+            'panel'=>[
+                'type'=>GridView::TYPE_PRIMARY,
+                'heading'=>'<i class="glyphicon glyphicon-briefcase"></i> Projekty',
+            ],
+            'showPageSummary' => true,
+            'toolbar' => [
+                [
+                    'content'=>
+                        Html::a('<i class="glyphicon glyphicon-plus"></i> Dodaj projekt', Url::to(['add']), ['class' => 'btn btn-success']) . ' ' .
+                        $deleteButton . ' '.
+                        Html::a('<i class="glyphicon glyphicon-repeat"></i> Resetuj widok', ['index'], [
+                            'class' => 'btn btn-default', 
+                            'title' => Yii::t('app', 'Resetuj widok')
+                        ]) 
+                ],
+                '{export}',
+                '{toggleData}'
+            ],
+//            'pjax'=>true,
             'pjaxSettings'=>[
                 'neverTimeout'=>true,
             ],
@@ -51,6 +69,10 @@ $deleteButton = $user->isAdmin() || $user->isSupervisor() ? Html::a(Yii::t('app'
                         ]
                     ],
                     'attribute' => 'name',
+                    'format' => 'raw',
+                    'value' => function($model){
+                        return Html::a($model->getShortName(), Url::to(['view', 'id' => $model->id]), ['data-pjax' => 0, 'title' => $model->name]);
+                    }
                 ],
                 [
                     'class' => '\kartik\grid\DataColumn',
@@ -66,8 +88,10 @@ $deleteButton = $user->isAdmin() || $user->isSupervisor() ? Html::a(Yii::t('app'
                         ]
                     ],
                     'attribute' => 'owner',
-                    'value' => 'owner.username',
-                    'label' => Yii::t('app', 'Właściciel projektu'),
+                    'format' => 'raw',
+                    'value' => function($model){
+                        return Html::a($model->owner->username, Url::to(['/user/view', 'id' => $model->owner_id]), ['data-pjax' => 0]);
+                    },
                 ],
                 [
                     'class' => '\kartik\grid\DataColumn',
@@ -83,8 +107,10 @@ $deleteButton = $user->isAdmin() || $user->isSupervisor() ? Html::a(Yii::t('app'
                         ]
                     ],
                     'attribute' => 'client',
-                    'value' => 'client.acronym',
-                    'label' => Yii::t('app', 'Klient'),
+                    'format' => 'raw',
+                    'value' => function($model){
+                        return $model->client ? Html::a($model->client->acronym, Url::to(['/client/view', 'id' => $model->client_id]), ['data-pjax' => 0]) : 'brak';
+                    },
                 ],
                 [
                     'class' => '\kartik\grid\DataColumn',
@@ -138,24 +164,7 @@ $deleteButton = $user->isAdmin() || $user->isSupervisor() ? Html::a(Yii::t('app'
                     ],
                 ],
             ],
-            'showPageSummary' => true,
-            'toolbar' => [
-                [
-                    'content'=>
-                        Html::a('<i class="glyphicon glyphicon-plus"></i> Dodaj projekt', Url::to(['add']), ['class' => 'btn btn-success']). ' '.
-                        Html::a('<i class="glyphicon glyphicon-repeat"></i> Resetuj widok', ['index'], [
-                            'class' => 'btn btn-default', 
-                            'title' => Yii::t('app', 'Resetuj widok')
-                        ]) . ' ' .
-                        $deleteButton
-                ],
-                '{export}',
-                '{toggleData}'
-            ],
-            'panel'=>[
-                'type'=>GridView::TYPE_PRIMARY,
-                'heading'=>'<i class="glyphicon glyphicon-briefcase"></i> Projekty',
-            ],
+
         ]) ?>
 </div>
 
