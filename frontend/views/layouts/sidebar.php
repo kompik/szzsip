@@ -8,7 +8,7 @@ use yii\widgets\Pjax;
 $user = Yii::$app->user->isGuest ? : Yii::$app->user->identity;
 ?>
 
-<div class='pjax-clock'><p>&nbsp;</p><p>&nbsp;</p></div>
+<div class="pjax-clock"><p>&nbsp;</p><p>&nbsp;</p></div>
 <div class="nav" id="side-nav">
     <?php
     
