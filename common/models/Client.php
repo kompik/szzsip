@@ -6,7 +6,6 @@ use yii\base\NotSupportedException;
 use yii\behaviors\TimestampBehavior;
 use yii\behaviors\BlameableBehavior;
 use yii\db\ActiveRecord;
-use yii\web\IdentityInterface;
 use common\models\Project;
 
 /**
@@ -28,6 +27,7 @@ use common\models\Project;
  * @property integer $updated_at
  * @property string $type
  * @property string $info
+ * @property integer $attendant Description
  */
 class Client extends ActiveRecord
 {
@@ -38,7 +38,7 @@ class Client extends ActiveRecord
     const TYPE_CUSTOMER = 'customer';
     const TYPE_COMPANY = 'company';
 
-
+    private $name;
 
     /**
      * @inheritdoc
@@ -66,10 +66,11 @@ class Client extends ActiveRecord
     {
         return [
             ['status', 'default', 'value' => self::STATUS_ACTIVE],
-            [['acronym', 'firstname'], 'required'],
+            [['acronym', 'firstname', 'type'], 'required'],
             ['acronym', 'unique', 'message' => 'Klient o takim akronimie już istnieje'],
             ['nip', 'unique', 'message' => 'Klient o takim numerze NIP już istnieje'],
-            [['firstname', 'lastname', 'acronym', 'street', 'street_no', 'postcode', 'city'], 'string'],
+            [['firstname', 'lastname', 'acronym', 'street', 'street_no', 'postcode', 'city', 'type', 'nip', 'info'], 'string'],
+            ['attendant', 'integer'],
             ['email', 'email']
         ];
     }
@@ -77,7 +78,7 @@ class Client extends ActiveRecord
     public function attributeLabels()
     {
         return [
-            'firstname' => $this->type == self::TYPE_CUSTOMER ? Yii::t('app', 'Imię') : Yii::t('app', 'Nazwa'),
+            'firstname' => $this->type ? ($this->type == self::TYPE_CUSTOMER ? Yii::t('app', 'Imię') : Yii::t('app', 'Nazwa')) : 'Imię lub nazwa firmy',
             'lastname' => Yii::t('app', 'Nazwisko'),
             'acronym' => Yii::t('app', 'Akronim'),
             'phone' => Yii::t('app', 'Telefon'),
@@ -89,10 +90,30 @@ class Client extends ActiveRecord
             'status' => Yii::t('app', 'Status'),
             'info' => Yii::t('app', 'Opis'),
             'created_at' => Yii::t('app', 'Utworzony'),
+            'created' => Yii::t('app', 'Utworzony'),
             'updated_at' => Yii::t('app', 'Edytowany'),
             'type' => Yii::t('app', 'Typ'),
+            'name' => Yii::t('app', 'Nazwa'),
+            'attendant' => Yii::t('app', 'Opiekun')
+            
         ];
     }
+    
+    public static function listStatuses(){
+        return [
+            self::STATUS_ACTIVE => Yii::t('app', 'Aktywny'),
+            self::STATUS_DELETED => Yii::t('app', 'Usunięty'),
+            self::STATUS_LOCKED => Yii::t('app', 'Zablokowany')
+        ];
+    }
+    
+    public static function listTypes(){
+        return [
+            self::TYPE_COMPANY => Yii::t('app', 'Firma'),
+            self::TYPE_CUSTOMER => Yii::t('app', 'Osoba fiz.'),
+        ];
+    }
+    
 
     /**
      * Finds user by username
@@ -130,8 +151,41 @@ class Client extends ActiveRecord
         return $query;
     }
     
+    public static function getAllClientsNames(){
+                $query = (new \yii\db\Query)->select(["CONCAT(firstname, ' ', COALESCE(lastname, '')) AS fullname"])
+                    ->from(self::tableName())
+                    ->where(['!=', 'status', User::STATUS_DELETED])
+                    ->indexBy('id')
+                    ->column();
+        return $query;
+    }
+
     public function getProjects()
     {
         return $this->hasMany(Project::className(), ['id' => 'client_id']);
+    }
+    
+    public function getName(){
+        if (empty($this->firstname) && empty($this->lastname)){
+            return 'brak danych';
+        }
+        $this->setName();
+        return $this->name;
+    }
+    
+    public function setName(){
+        if ($this->type == self::TYPE_CUSTOMER){
+            $this->name = $this->firstname. ' '. $this->lastname;
+        } else {
+            $this->name = $this->firstname;
+        }
+    }
+    
+    public function getCreator(){
+        return $this->hasOne(User::className(), ['id' => 'created_by']);
+    }
+    
+    public function getClientAttendant(){
+        return $this->hasOne(User::className(), ['id' => 'attendant']);
     }
 }
