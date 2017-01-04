@@ -35,7 +35,6 @@ class UserController extends Controller
         return [
             'access' => [
                 'class' => AccessControl::className(),
-                'only' => ['index', 'add', 'edit', 'delete', 'view', 'add-attendant'],
                 'rules' => [
                     [
                         'actions' => [],
@@ -43,7 +42,7 @@ class UserController extends Controller
                         'roles' => ['?'],
                     ],
                     [
-                        'actions' => ['index', 'add', 'edit', 'delete', 'view', 'add-attendant'],
+                        'actions' => ['index', 'add', 'update', 'delete', 'view', 'add-property'],
                         'allow' => true,
                         'roles' => ['@'],
                     ],
@@ -118,7 +117,7 @@ class UserController extends Controller
     
     public function actionView($id)
     {
-        $client = Client::findOne([$id]);
+        $user = User::findOne([$id]);
         $projectSearchModel = new ProjectSearch();
         $projectDataProvider = $projectSearchModel->search(Yii::$app->request->queryParams, $client_id = $id);
         $clientAllProjectsNames = Project::getAllProjectsNames($client_id = $id);
@@ -126,7 +125,7 @@ class UserController extends Controller
         $orderDataProvider = $orderSearchModel->search(Yii::$app->request->queryParams, null, $client_id = $id);
         $clientAllOrdersNames = Order::getAllOrdersNames($client_id = $id, false, 'name');
         return $this->render('view', [
-            'client' => $client,
+            'user' => $user,
             'projectDataProvider' => $projectDataProvider,
             'projectSearchModel' => $projectSearchModel,
             'clientAllProjectsNames' => $clientAllProjectsNames,
@@ -163,9 +162,9 @@ class UserController extends Controller
     
     public function actionUpdate($id)
     {
-        $client = Client::findOne($id);
+        $user = User::findOne($id);
         
-        if ($client->load(Yii::$app->request->post()) && $client->save())
+        if ($user->load(Yii::$app->request->post()) && $user->save())
         {
             Yii::$app->session->addFlash('success', Yii::t('app', 'Zapisano zmiany.'));
             return $this->redirect(['index']);
@@ -174,7 +173,7 @@ class UserController extends Controller
         $usersList = User::find(['!=', 'type', User::TYPE_CLIENT])
                 ->select('username')->indexBy('id')->column();
         return $this->render('update', [
-            'client' => $client,
+            'user' => $user,
             'usersList' => $usersList
                 ]);
     }

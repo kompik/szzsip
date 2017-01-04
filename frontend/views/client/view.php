@@ -20,7 +20,7 @@ $this->params['breadcrumbs'][] = $this->title;
         ['update', 'id' => $client->id ], 
         [
             'class' => 'btn btn-success',
-            'id' => 'btn-edit-client'
+            'id' => 'btn-edit'
             ])?>
 <?= Tabs::widget([
     'items' => [

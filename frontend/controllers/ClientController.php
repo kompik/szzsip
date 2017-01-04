@@ -187,12 +187,12 @@ class ClientController extends Controller
     
     public function actionDelete($id)
     {
-        $project = Project::findOne($id);
+        $client = Client::findOne($id);
         
-        $project->status = Project::STATUS_DELETED;
-        if ($project->save(false, ['status', 'updated_at']))
+        $client->status = Client::STATUS_DELETED;
+        if ($client->save())
         {
-            Yii::$app->session->addFlash('success', Yii::t('app', 'Usunięto projekt.'));
+            Yii::$app->session->addFlash('success', Yii::t('app', 'Usunięto klienta '. $client->acronym .'.'));
             return $this->redirect(['index']);
 
         }

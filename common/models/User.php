@@ -17,7 +17,7 @@ use common\models\Task;
  * @property string $username
  * @property string $firstname
  * @property string $lastname
- * @property string $company_name
+ * @property string $client_id
  * @property string $phone
  * @property string $password_hash
  * @property string $password_reset_token
@@ -70,7 +70,9 @@ class User extends ActiveRecord implements IdentityInterface
         return [
             ['status', 'default', 'value' => self::STATUS_ACTIVE],
             [['username', 'email'], 'unique'],
-            ['email', 'email']
+            ['email', 'email'],
+            [['firstname', 'lastname', 'username', 'type', 'phone'], 'string'],
+            [['client_id', 'created_at', 'updated_at', 'created_by', 'updated_by', 'group_id'], 'integer']
         ];
     }
     
@@ -89,6 +91,23 @@ class User extends ActiveRecord implements IdentityInterface
             self::TYPE_SUPERVISOR => Yii::t('app', 'kierownik'),
             self::TYPE_SERVICEMAN => Yii::t('app', 'pracownik'),
             self::TYPE_CLIENT => Yii::t('app', 'klient'),
+        ];
+    }
+    
+    public function attributeLabels()
+    {
+        return [
+            'firstname' => Yii::t('app', 'Imię'),
+            'lastname' => Yii::t('app', 'Nazwisko'),
+            'username' => Yii::t('app', 'Login'),
+            'phone' => Yii::t('app', 'Telefon'),
+            'status' => Yii::t('app', 'Status'),
+            'created_at' => Yii::t('app', 'Utworzony'),
+            'created' => Yii::t('app', 'Utworzony'),
+            'updated_at' => Yii::t('app', 'Edytowany'),
+            'type' => Yii::t('app', 'Typ'),
+            'name' => Yii::t('app', 'Imię i nazwisko'),
+            
         ];
     }
 
