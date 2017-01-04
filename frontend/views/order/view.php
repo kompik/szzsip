@@ -47,7 +47,11 @@ $addToTaskButton = Html::a(Yii::t('app', '<i class="glyphicon glyphicon-plus"></
     <div class="row specs-col-sm-2">
         <div class="col-sm-2">
             <label><?= $order->getAttributeLabel('client_id') ?></label>
-            <div><?= $order->client ? Html::a($order->client->acronym, Url::to(['/client/view', 'id' => $order->client_id])) : 'brak' ?></div><hr>
+            <div><?= $order->client ? 
+                Html::a($order->client->acronym, 
+                        Url::to(['/client/view', 'id' => $order->client_id])) : 
+                Html::a(Yii::t('app', 'dodaj klienta'), 
+                        Url::to(['/project/add-property', 'id' => $order->id, 'property' => 'client_id'])) ?></div><hr>
         </div>
         <div class="col-sm-2">
             <label><?= $order->getAttributeLabel('project_id') ?></label>
@@ -115,7 +119,7 @@ $addToTaskButton = Html::a(Yii::t('app', '<i class="glyphicon glyphicon-plus"></
 //                            'minimumInputLength' => 3,
                         ]
                     ],
-                    'attribute' => 'task',
+                    'attribute' => 'task.name',
                     'format' => 'raw',
                     'value' => function($model){
                         return Html::a($model->task->shortName, Url::to(['/task/view', 'id' => $model->task->id]), ['data-pjax' => 0, 'title' => $model->task->id]);
@@ -161,7 +165,7 @@ $addToTaskButton = Html::a(Yii::t('app', '<i class="glyphicon glyphicon-plus"></
                 [
                     'class' => '\kartik\grid\DataColumn',
                     'filterType' => GridView::FILTER_DATE_RANGE,
-                    'attribute' => 'created_at',
+                    'attribute' => 'created',
                     'filterWidgetOptions' => [
                         'presetDropdown' => true,
                         'pluginOptions' => [

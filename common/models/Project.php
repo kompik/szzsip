@@ -76,7 +76,9 @@ class Project extends ActiveRecord
             'client' => Yii::t('app', 'Klient'),
             'status' => Yii::t('app', 'Status'),
             'description' => Yii::t('app', 'Opis'),
-            'created_at' => Yii::t('app', 'Utworzony')
+            'created_at' => Yii::t('app', 'Utworzony'),
+            'created' => Yii::t('app', 'Utworzony'),
+            'actions' => Yii::t('app', 'Akcje')
         ];
     }
     
@@ -100,15 +102,20 @@ class Project extends ActiveRecord
         ];
     }
     
-    public static function getAllProjectsNames()
+    public static function getAllProjectsNames($client_id = null, $owner_id = null)
     {
         $query = (new \yii\db\Query)->select(['name'])
                     ->from(self::tableName())
                     ->where(['!=', 'status', self::STATUS_DELETED])
                     ->indexBy('name')
-                    ->orderBy('name')
-                    ->column();
-        return $query;
+                    ->orderBy('name');
+        if ($client_id){
+            $query->andWhere(['client_id' => $owner_id]);
+        }
+        if ($owner_id){
+            $query->andWhere(['owner_id' => $client_id]);
+        }
+        return $query->column();
     }
     
     public function getOrders()

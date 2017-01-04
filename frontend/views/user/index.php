@@ -14,10 +14,10 @@ use kartik\mpdf\Pdf;
 /* @var $this View */
 /* @var $dataProvider ActiveDataProvider*/
 
-$this->title = 'Klienci';
+$this->title = 'Użytkownicy';
 $this->params['breadcrumbs'][] = $this->title;
 $user = Yii::$app->user->isGuest ? : Yii::$app->user->identity;
-$deleteButton = $user->isAdmin() || $user->isSupervisor() ? Html::a(Yii::t('app', '<i class="glyphicon glyphicon-minus"></i> Usuń zaznaczonych klientów'), Url::to(['add']), ['class' => 'btn btn-danger']) : '';
+$deleteButton = $user->isAdmin() || $user->isSupervisor() ? Html::a(Yii::t('app', '<i class="glyphicon glyphicon-minus"></i> Usuń zaznaczonych użytkowników'), Url::to(['add']), ['class' => 'btn btn-danger']) : '';
 
 ?>
 
@@ -26,11 +26,11 @@ $deleteButton = $user->isAdmin() || $user->isSupervisor() ? Html::a(Yii::t('app'
         <?= GridView::widget([
             'panel'=>[
                 'type'=>GridView::TYPE_PRIMARY,
-                'heading'=>'<i class="glyphicon glyphicon-king"></i> Klienci',
+                'heading'=>'<i class="glyphicon glyphicon-user"></i> Użytkownicy',
             ],'toolbar' => [
                 [
                     'content'=>
-                        Html::a('<i class="glyphicon glyphicon-plus"></i> Dodaj klienta', Url::to(['add']), ['class' => 'btn btn-success']). ' ' .
+                        Html::a('<i class="glyphicon glyphicon-plus"></i> Dodaj użytkownika', Url::to(['add']), ['class' => 'btn btn-success']). ' ' .
                         $deleteButton. ' '.
                         Html::a('<i class="glyphicon glyphicon-repeat"></i> Resetuj widok', ['index'], [
                             'class' => 'btn btn-default', 
@@ -67,17 +67,17 @@ $deleteButton = $user->isAdmin() || $user->isSupervisor() ? Html::a(Yii::t('app'
 ////                            'minimumInputLength' => 3,
 //                        ]
 //                    ],
-                    'attribute' => 'acronym',
+                    'attribute' => 'username',
                     'format' => 'raw',
                     'value' => function($model){
-                        return Html::a($model->acronym, Url::to(['view', 'id' => $model->id]), ['data-pjax' => 0, 'title' => $model->acronym]);
+                        return Html::a($model->username, Url::to(['view', 'id' => $model->id]), ['data-pjax' => 0, 'title' => $model->username]);
                     }
                 ],
                 [
                     'class' => '\kartik\grid\DataColumn',
                     'filterType' => GridView::FILTER_SELECT2,
                     'filterWidgetOptions' => [
-                        'data' => Client::getAllClientsNames(),
+                        'data' => User::findAllUsers(),
                         'options' => [
                             'placeholder' => 'filtruj po nazwie ...',
                             'initValueText' => ''
@@ -116,7 +116,7 @@ $deleteButton = $user->isAdmin() || $user->isSupervisor() ? Html::a(Yii::t('app'
                     'class' => '\kartik\grid\DataColumn',
                     'filterType' => GridView::FILTER_SELECT2,
                     'filterWidgetOptions' => [
-                        'data' => Client::listTypes(),
+                        'data' => User::listTypes(),
                         'options' => [
                             'placeholder' => 'filtruj po typie ...',
                             'initValueText' => ''
@@ -128,14 +128,14 @@ $deleteButton = $user->isAdmin() || $user->isSupervisor() ? Html::a(Yii::t('app'
                     'attribute' => 'type',
                     'format' => 'raw',
                     'value' => function($model){
-                        return Client::listTypes()[$model->type];
+                        return User::listTypes()[$model->type];
                     },
                 ],
                 [
                     'class' => '\kartik\grid\DataColumn',
                     'filterType' => GridView::FILTER_SELECT2,
                     'filterWidgetOptions' => [
-                        'data' => Client::listStatuses(),
+                        'data' => User::listStatuses(),
                         'options' => [
                             'placeholder' => 'filtruj po statusie ...',
                             'initValueText' => ''
@@ -146,7 +146,7 @@ $deleteButton = $user->isAdmin() || $user->isSupervisor() ? Html::a(Yii::t('app'
                     ],
                     'attribute' => 'status',
                     'value' => function($model) {
-                                    return Client::listStatuses()[$model->status];
+                                    return User::listStatuses()[$model->status];
                                 },
                 ],
                 [

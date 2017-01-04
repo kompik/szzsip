@@ -8,6 +8,7 @@ use yii\data\ActiveDataProvider;
 use kartik\grid\GridView;
 use common\models\User;
 use common\helpers\TimeHelper;
+use yii\bootstrap\Tabs;
 
 /* @var $client Client */
 /* @var $this View*/
@@ -15,56 +16,40 @@ use common\helpers\TimeHelper;
 $this->title = 'Klient '.$client->name;
 $this->params['breadcrumbs'][] = $this->title;
 ?>
-<div class="col-sm-12">
-    <div class="row">
-       <hr> 
-    </div>
-    <div class="row">
-        <div class="col-sm-12">
-            <label class=""><?= $client->getAttributeLabel('name') ?></label>
-            <div><?= $client->name ?></div>
-            <hr>
-        </div>
-        
-        <div class="col-sm-12">
-            <label><?= $client->getAttributeLabel('info') ?></label>
-            <div><?= $client->info ?></div>
-            <hr>
-        </div>
-    </div>
-    
+<?= Html::a(Yii::t('app', 'Edytuj dane klienta'), 
+        ['update', 'id' => $client->id ], 
+        [
+            'class' => 'btn btn-success',
+            'id' => 'btn-edit-client'
+            ])?>
+<?= Tabs::widget([
+    'items' => [
+        [
+            'label' => 'Informacje ogólne',
+            'active' => 'true',
+            'content' => $this->render('_info-tab', ['client' => $client])
+        ],
+        [
+            'label' => 'Projekty',
+            'content' => $this->render('_projects-tab', [
+                'client' => $client,
+                'projectDataProvider' => $projectDataProvider,
+                'projectSearchModel' => $projectSearchModel,
+                'clientAllProjectsNames' => $clientAllProjectsNames
+                    ])
+        ],
+        [
+            'label' => 'Zlecenia',
+            'content' => $this->render('_orders-tab', [
+                'client' => $client,
+                'orderDataProvider' => $orderDataProvider,
+                'orderSearchModel' => $orderSearchModel,
+                'clientAllOrdersNames' => $clientAllOrdersNames
+                    ])
+        ],
+        [
+            'label' => 'Użytkownicy'
+        ]
+    ]
+])?>
 
-    <div class="row specs-col-sm-2">
-        <div class="col-sm-2">
-            <label><?= $client->getAttributeLabel('acronym') ?></label>
-            <div><?= $client->acronym ?></div><hr>
-        </div>
-        <div class="col-sm-2">
-            <label><?= $client->getAttributeLabel('type') ?></label>
-            <div><?= Client::listTypes()[$client->type] ?></div><hr>
-        </div>
-        <div class="col-sm-2">
-            <label><?= $client->getAttributeLabel('attendant') ?></label>
-            <div><?= $client->attendant ? 
-                    $client->clientAttendant->username : 
-                    Html::a('dodaj opiekuna', 
-                            ['add-attendant', 'id' => $client->id], 
-                            [
-                                'id' => 'add-attendant',
-                                'title' => 'Dodaj opiekuna dla klienta '.$client->acronym
-                            ])?>
-            </div>
-            <hr>
-        </div>
-
-        <div class="col-sm-2">
-            <label><?= $client->getAttributeLabel('created_at') ?></label>
-            <div><?= date('d-m-Y H:i', $client->created_at) ?></div><hr>
-        </div>
-
-        <div class="col-sm-2">
-            <label><?= $client->getAttributeLabel('status') ?></label>
-            <div><?= Client::listStatuses()[$client->status] ?></div><hr>
-        </div>
-    </div>
-</div>

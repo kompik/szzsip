@@ -17,7 +17,7 @@ $this->params['breadcrumbs'][] = $this->title;
     
     <?= $form->field($client, 'firstname')->textInput() ?>
     <?= $form->field($client, 'lastname')->textInput() ?>
-    <?= $form->field($client, 'acronym')->textInput() ?>
+    <?= $form->field($client, 'acronym')->textInput(['disabled' => $client->acronym ? 'disabled' : '']) ?>
     <?= $form->field($client, 'nip')->textInput() ?>
     <?= $form->field($client, 'street')->textInput() ?>
     <?= $form->field($client, 'street_no')->textInput() ?>

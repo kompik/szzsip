@@ -40,7 +40,8 @@ class User extends ActiveRecord implements IdentityInterface
     const TYPE_SUPERVISOR = 'supervisor';
     const TYPE_SERVICEMAN = 'serviceman';
     const TYPE_CLIENT = 'client';
-
+    
+    private $name;
 
     /**
      * @inheritdoc
@@ -70,6 +71,24 @@ class User extends ActiveRecord implements IdentityInterface
             ['status', 'default', 'value' => self::STATUS_ACTIVE],
             [['username', 'email'], 'unique'],
             ['email', 'email']
+        ];
+    }
+    
+    
+    public static function listStatuses(){
+        return [
+            self::STATUS_ACTIVE => Yii::t('app', 'aktywny'),
+            self::STATUS_DELETED => Yii::t('app', 'usunięty'),
+            self::STATUS_LOCKED => Yii::t('app', 'zablokowany'),
+        ];
+    }
+    
+    public static function listTypes(){
+        return [
+            self::TYPE_ADMIN => Yii::t('app', 'administrator'),
+            self::TYPE_SUPERVISOR => Yii::t('app', 'kierownik'),
+            self::TYPE_SERVICEMAN => Yii::t('app', 'pracownik'),
+            self::TYPE_CLIENT => Yii::t('app', 'klient'),
         ];
     }
 
@@ -256,5 +275,19 @@ class User extends ActiveRecord implements IdentityInterface
     public function getTasks()
     {
         return $this->hasMany(Task::className(), ['id' => 'created_by']);
+    }
+    
+    public function setName($name){
+        $this->name = $name;
+    }
+    
+    public function getName(){
+        if (empty($this->firstname) && empty($this->lastname)){
+            return $this->username;
+        }
+        
+        $name = $this->firstname .' '. $this->lastname;
+        $this->setName($name);
+        return $name;
     }
 }

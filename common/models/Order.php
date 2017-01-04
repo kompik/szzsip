@@ -72,6 +72,7 @@ class Order extends Project
             'status' => Yii::t('app', 'Status'),
             'description' => Yii::t('app', 'Opis'),
             'created_at' => Yii::t('app', 'Utworzony'),
+            'created' => Yii::t('app', 'Utworzony'),
             'project_id' => Yii::t('app', 'Projekt'),
             'owner' => Yii::t('app', 'Właściciel zlecenia'),
             'client' => Yii::t('app', 'Klient'),
@@ -94,13 +95,13 @@ class Order extends Project
         return $this->hasOne(Project::className(), ['id' => 'project_id']);
     }
     
-    public static function getAllOrdersNames($id = false, $index)
+    public static function getAllOrdersNames($project_id = false, $client_id = false, $index)
     {
         $query = (new \yii\db\Query)->select(['name'])
                     ->from(self::tableName())
                     ->where(['!=', 'status', self::STATUS_DELETED]);
-        if ($id) {
-            $query->andWhere(['project_id' => $id]);
+        if ($project_id) {
+            $query->andWhere(['project_id' => $project_id]);
         }
         $query->indexBy($index)->orderBy('name');
         return $query->column();  

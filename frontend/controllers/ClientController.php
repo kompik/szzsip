@@ -9,6 +9,7 @@ use yii\web\Controller;
 use yii\filters\VerbFilter;
 use yii\filters\AccessControl;
 use common\models\Project;
+use common\models\ProjectSearch;
 use common\models\User;
 use common\models\ClientSearch;
 use common\models\Client;
@@ -124,9 +125,20 @@ class ClientController extends Controller
     public function actionView($id)
     {
         $client = Client::findOne([$id]);
-     
+        $projectSearchModel = new ProjectSearch();
+        $projectDataProvider = $projectSearchModel->search(Yii::$app->request->queryParams, $client_id = $id);
+        $clientAllProjectsNames = Project::getAllProjectsNames($client_id = $id);
+        $orderSearchModel = new OrderSearch();
+        $orderDataProvider = $orderSearchModel->search(Yii::$app->request->queryParams, null, $client_id = $id);
+        $clientAllOrdersNames = Order::getAllOrdersNames($client_id = $id, false, 'name');
         return $this->render('view', [
             'client' => $client,
+            'projectDataProvider' => $projectDataProvider,
+            'projectSearchModel' => $projectSearchModel,
+            'clientAllProjectsNames' => $clientAllProjectsNames,
+            'orderDataProvider' => $orderDataProvider,
+            'orderSearchModel' => $orderSearchModel,
+            'clientAllOrdersNames' => $clientAllOrdersNames
                 ]);
     }
 
@@ -186,7 +198,7 @@ class ClientController extends Controller
         }
     }
     
-    public function actionAddAttendant($id){
+    public function actionAddProperty($id, $property = null){
         $client = Client::findOne($id);
         
         if ($client->load(Yii::$app->request->post()) && $client->save()){
@@ -194,9 +206,10 @@ class ClientController extends Controller
             return $this->redirect(['view', 'id' => $id]);
         }
         $usersList = User::find(['!=', 'type', User::TYPE_CLIENT])->select('username')->indexBy('id')->column();
-        return $this->renderPartial('_modal-add-attendant', [
-           'client' => $client,
-           'usersList' => $usersList
+        return $this->renderPartial('_modal-add-property', [
+            'client' => $client,
+            'usersList' => $usersList,
+            'property' => $property
         ]);
         
     }

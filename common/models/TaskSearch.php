@@ -86,7 +86,7 @@ class TaskSearch extends Task
         
         
         if(isset($this->created) && $this->created!=''){
-            $date_explode = explode("TO", $this->created);
+            $date_explode = explode("-", $this->created);
             $date1 = trim($date_explode[0]);
             $date2= trim($date_explode[1]);
             $query->andFilterWhere(['between', 'created_at', $date1, $date2]);

@@ -9,8 +9,9 @@ use yii\web\Controller;
 use yii\filters\VerbFilter;
 use yii\filters\AccessControl;
 use common\models\Project;
-use common\models\User;
 use common\models\ProjectSearch;
+use common\models\User;
+use common\models\UserSearch;
 use common\models\Client;
 use frontend\models\ProjectForm;
 use common\models\OrderSearch;
@@ -22,7 +23,7 @@ use yii\web\NotFoundHttpException;
 use yii\web\Response;
 use yii\data\ActiveDataProvider;
 
-class ProjectController extends Controller
+class UserController extends Controller
 {
     /**
      * @inheritdoc
@@ -34,7 +35,7 @@ class ProjectController extends Controller
         return [
             'access' => [
                 'class' => AccessControl::className(),
-                'only' => ['index', 'add', 'edit', 'delete', 'view'],
+                'only' => ['index', 'add', 'edit', 'delete', 'view', 'add-attendant'],
                 'rules' => [
                     [
                         'actions' => [],
@@ -42,7 +43,7 @@ class ProjectController extends Controller
                         'roles' => ['?'],
                     ],
                     [
-                        'actions' => ['index', 'add', 'edit', 'delete', 'view'],
+                        'actions' => ['index', 'add', 'edit', 'delete', 'view', 'add-attendant'],
                         'allow' => true,
                         'roles' => ['@'],
                     ],
@@ -107,90 +108,74 @@ class ProjectController extends Controller
      */
     public function actionIndex()
     {
-        $searchModel = new ProjectSearch();
+        $searchModel = new UserSearch();
         $dataProvider = $searchModel->search(Yii::$app->request->queryParams);
-        $userList = User::findAllUsers();
-        $clientsList = Client::findAllClients();
-        $projectsNames = Project::getAllProjectsNames();
         return $this->render('index', [
             'dataProvider' => $dataProvider,
             'searchModel' => $searchModel,
-            'userList' => $userList,
-            'clientsList' => $clientsList,
-            'projectsNames' => $projectsNames
                 ]);
     }
     
     public function actionView($id)
     {
-        $project = Project::findOne([$id]);
-        $searchModel = new OrderSearch();
-        $dataProvider = $searchModel->search(Yii::$app->request->queryParams, $project_id = $id, null);
-        $userList = User::findAllUsers();
-        $clientsList = Client::findAllClients();
-        $orderNames = Order::getAllOrdersNames($project_id = $id, false ,'name');
-        $orders = $project->orders;
-        
+        $client = Client::findOne([$id]);
+        $projectSearchModel = new ProjectSearch();
+        $projectDataProvider = $projectSearchModel->search(Yii::$app->request->queryParams, $client_id = $id);
+        $clientAllProjectsNames = Project::getAllProjectsNames($client_id = $id);
+        $orderSearchModel = new OrderSearch();
+        $orderDataProvider = $orderSearchModel->search(Yii::$app->request->queryParams, null, $client_id = $id);
+        $clientAllOrdersNames = Order::getAllOrdersNames($client_id = $id, false, 'name');
         return $this->render('view', [
-            'project' => $project,
-            'searchModel' => $searchModel,
-            'dataProvider' => $dataProvider,
-            'userList' => $userList,
-            'clientsList' => $clientsList,
-            'orderNames' => $orderNames,
-            'orders' => $orders
+            'client' => $client,
+            'projectDataProvider' => $projectDataProvider,
+            'projectSearchModel' => $projectSearchModel,
+            'clientAllProjectsNames' => $clientAllProjectsNames,
+            'orderDataProvider' => $orderDataProvider,
+            'orderSearchModel' => $orderSearchModel,
+            'clientAllOrdersNames' => $clientAllOrdersNames
                 ]);
     }
 
     public function actionAdd()
     {
-        $projectForm = new ProjectForm();
-        if ($projectForm->load(Yii::$app->request->post()) && $projectForm->validate()){
+        $client = new Client();
+        if ($client->load(Yii::$app->request->post()) && $client->validate()){
             $transaction = Yii::$app->db->beginTransaction();
                 try {
-                    $projectForm->addProject();
+                    $client->save();
                     $transaction->commit();
-                    Yii::$app->session->addFlash('success', Yii::t('app', 'Dodano projekt'));
-                    return $this->redirect('/project/index');
+                    Yii::$app->session->addFlash('success', Yii::t('app', 'Dodano klienta'));
+                    return $this->redirect('/client/index');
                 }
                 catch (ActionException $ex){
                     $transaction->rollBack();
-                    $projectForm->addError('name', $ex->getMessage());
+                    $client->addError('firstname', $ex->getMessage());
                 }                   
                 catch (Exception $ex) {
                     $transaction->rollBack();
                     Yii::$app->session->addFlash('error', $ex->getMessage());
                 }
         }
-        $userList = User::findAllUsers();
-        $clientsList = Client::findAllClients();
-        $projectStatus = Project::listStatuses();
         return $this->render('add', [
-            'projectForm' => $projectForm,
-            'userList' => $userList,
-            'clientsList' => $clientsList,
-            'projectStatus' => $projectStatus
+            'client' => $client,
                 ]);
     }
     
     public function actionUpdate($id)
     {
-        $project = Project::findOne($id);
+        $client = Client::findOne($id);
         
-        if ($project->load(Yii::$app->request->post()) && $project->save())
+        if ($client->load(Yii::$app->request->post()) && $client->save())
         {
             Yii::$app->session->addFlash('success', Yii::t('app', 'Zapisano zmiany.'));
             return $this->redirect(['index']);
 
         }
-        $userList = User::findAllUsers();
-        $clientsList = Client::findAllClients();
-        $projectStatus = Project::listStatuses();
+        $usersList = User::find(['!=', 'type', User::TYPE_CLIENT])
+                ->select('username')->indexBy('id')->column();
         return $this->render('update', [
-            'project' => $project,
-            'userList' => $userList,
-            'clientsList' => $clientsList,
-            'projectStatus' => $projectStatus
+            'client' => $client,
+            'usersList' => $usersList
                 ]);
     }
     
@@ -205,6 +190,22 @@ class ProjectController extends Controller
             return $this->redirect(['index']);
 
         }
+    }
+    
+    public function actionAddProperty($id, $property = null){
+        $client = Client::findOne($id);
+        
+        if ($client->load(Yii::$app->request->post()) && $client->save()){
+            Yii::$app->session->addFlash('success', Yii::t('app', 'Zapisano zmiany.'));
+            return $this->redirect(['view', 'id' => $id]);
+        }
+        $usersList = User::find(['!=', 'type', User::TYPE_CLIENT])->select('username')->indexBy('id')->column();
+        return $this->renderPartial('_modal-add-property', [
+            'client' => $client,
+            'usersList' => $usersList,
+            'property' => $property
+        ]);
+        
     }
     
 }

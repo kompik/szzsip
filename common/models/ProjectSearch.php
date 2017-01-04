@@ -32,14 +32,20 @@ class ProjectSearch extends Project // extends from Tour see?
         ];
     }
 // ... model continues here
-    public function search($params)
+    public function search($params, $client_id = null, $owner_id = null)
     {
         // create ActiveQuery
-        $query = Project::find()->having(['<>', 'status', Project::STATUS_DELETED]);
+        $query = Project::find()->having(['<>', 'status', Project::STATUS_DELETED])->orderBy('name');
         // Important: lets join the query with our previously mentioned relations
         // I do not make any other configuration like aliases or whatever, feel free
         // to investigate that your self
         $query->joinWith(['owner', 'client', 'orders']);
+        if ($client_id){
+            $query->where([Project::tableName().'.client_id' => $client_id]);
+        }
+        if ($owner_id){
+            $query->where([Project::tableName().'.owner_id' => $owner_id]);
+        }
 
         $dataProvider = new ActiveDataProvider([
             'query' => $query,
@@ -71,10 +77,10 @@ class ProjectSearch extends Project // extends from Tour see?
             'desc' => ['project.created_at' => SORT_DESC],
         ];
         
-        $dataProvider->sort->attributes['orders'] = [
-            'asc' => ['orders.id' => SORT_ASC],
-            'desc' => ['orders.id' => SORT_DESC],
-        ];
+//        $dataProvider->sort->attributes['orders'] = [
+//            'asc' => ['orders.id' => SORT_ASC],
+//            'desc' => ['orders.id' => SORT_DESC],
+//        ];
         // No search? Then return data Provider
         if (!($this->load($params) && $this->validate())) {
             return $dataProvider;
@@ -86,14 +92,14 @@ class ProjectSearch extends Project // extends from Tour see?
         ->andFilterWhere(['like', 'user.id', $this->owner])
         ->andFilterWhere(['like', 'project.status', $this->status])
         ->andFilterWhere(['like', 'project.name', $this->name])
-        ->andFilterWhere(['like', 'orders.id', $this->order]);
-        
+//        ->andFilterWhere(['like', 'orders.id', $this->order])
+        ;
         
         if(isset($this->created) && $this->created!=''){
-            $date_explode = explode("TO", $this->created);
+            $date_explode = explode("-", $this->created);
             $date1 = trim($date_explode[0]);
             $date2= trim($date_explode[1]);
-            $query->andFilterWhere(['between', 'created_at', $date1,$date2]);
+            $query->andFilterWhere(['between', Project::tableName().'.created_at', strtotime($date1), strtotime($date2)]);
         }
         // We have to do some search... Lets do some magic
 

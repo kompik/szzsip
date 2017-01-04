@@ -34,18 +34,21 @@ class OrderSearch extends Order // extends from Tour see?
             'client' => Yii::t('app', 'Klient'),
             'executive' => Yii::t('app', 'Wykonawca'),
             'status' => Yii::t('app', 'Status'),
-            'name' => Yii::t('app', 'Nazwa'),
+            'name' => Yii::t('app', 'Nazwa zlecenia'),
             'created' => Yii::t('app', 'Utworzony'),
             'project' => Yii::t('app', 'Projekt'),
         ];
     }
 // ... model continues here
-    public function search($params, $id = null)
+    public function search($params, $project_id = null, $client_id = null)
     {
         // create ActiveQuery
         $query = Order::find()->having(['<>', 'status', Project::STATUS_DELETED]);
-        if ($id) {
-            $query->andHaving(['project_id' => $id]);
+        if ($project_id) {
+            $query->andHaving(['project_id' => $project_id]);
+        }
+        if ($client_id) {
+            $query->andHaving(['client_id' => $client_id]);
         }
         // Important: lets join the query with our previously mentioned relations
         // I do not make any other configuration like aliases or whatever, feel free

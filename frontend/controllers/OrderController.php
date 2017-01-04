@@ -115,7 +115,7 @@ class OrderController extends Controller
         $dataProvider = $searchModel->search(Yii::$app->request->queryParams);
         $userList = User::findAllUsers();
         $clientsList = Client::findAllClients();
-        $orderNames = Order::getAllOrdersNames(false, 'name');
+        $orderNames = Order::getAllOrdersNames(false, false, 'name');
         $projects = Project::getAllProjects();
         return $this->render('index', [
             'dataProvider' => $dataProvider,

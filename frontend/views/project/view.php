@@ -24,6 +24,7 @@ $deleteButton = $user->isAdmin() || $user->isSupervisor() ? Html::a(Yii::t('app'
 <div class="col-sm-12">
     <div class="row">
         <?=    Html::a(Yii::t('app', '<i class="glyphicon glyphicon-plus"></i> Dodaj zlecenie do projektu'), ['/order/add', 'project_id' => $project->id], ['class' => 'btn btn-success'])?>
+        <?=    Html::a(Yii::t('app', '<i class="glyphicon glyphicon-pencil"></i> Edytuj projekt'), ['/project/update', 'id' => $project->id], ['class' => 'btn btn-success'])?>
        <hr> 
     </div>
     
@@ -45,7 +46,11 @@ $deleteButton = $user->isAdmin() || $user->isSupervisor() ? Html::a(Yii::t('app'
     <div class="row">
         <div class="col-sm-3">
             <label><?= $project->getAttributeLabel('client_id') ?></label>
-            <div><?= Html::a($project->client->acronym, Url::to(['/client/view', 'id' => $project->client_id])) ?></div><hr>
+            <div><?= $project->client ? 
+                Html::a($project->client->acronym, 
+                        Url::to(['/client/view', 'id' => $project->client_id])) : 
+                Html::a(Yii::t('app', 'dodaj klienta'), 
+                        Url::to(['/project/add-property', 'id' => $project->id, 'property' => 'client_id']))?></div><hr>
         </div>
         <div class="col-sm-3">
             <label><?= $project->getAttributeLabel('owner_id') ?></label>
@@ -177,7 +182,7 @@ $deleteButton = $user->isAdmin() || $user->isSupervisor() ? Html::a(Yii::t('app'
                 [
                     'class' => '\kartik\grid\DataColumn',
                     'filterType' => GridView::FILTER_DATE_RANGE,
-                    'attribute' => 'created_at',
+                    'attribute' => 'created',
                     'filterWidgetOptions' => [
                         'presetDropdown' => true,
                         'pluginOptions' => [
@@ -196,6 +201,7 @@ $deleteButton = $user->isAdmin() || $user->isSupervisor() ? Html::a(Yii::t('app'
                 [
                     'class' => '\kartik\grid\ActionColumn',
                     'deleteOptions' => ['label' => '<i class="glyphicon glyphicon-remove"></i>'],
+                    'header' => 'Akcje',
                     'viewOptions' => [
                         'title' => 'Pokaż szczegóły'
                     ],

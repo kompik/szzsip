@@ -154,7 +154,7 @@ $deleteButton = $user->isAdmin() || $user->isSupervisor() ? Html::a(Yii::t('app'
                 [
                     'class' => '\kartik\grid\DataColumn',
                     'filterType' => GridView::FILTER_DATE_RANGE,
-                    'attribute' => 'created_at',
+                    'attribute' => 'created',
                     'filterWidgetOptions' => [
                         'presetDropdown' => true,
                         'pluginOptions' => [
@@ -173,6 +173,7 @@ $deleteButton = $user->isAdmin() || $user->isSupervisor() ? Html::a(Yii::t('app'
                 [
                     'class' => '\kartik\grid\ActionColumn',
                     'deleteOptions' => ['label' => '<i class="glyphicon glyphicon-remove"></i>'],
+                    'header' => 'Akcje',
                     'viewOptions' => [
                         'title' => 'Pokaż szczegóły'
                     ],
